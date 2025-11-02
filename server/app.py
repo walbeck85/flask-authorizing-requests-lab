@@ -77,7 +77,9 @@ class CheckSession(Resource):
 
     def get(self):
         
-        user_id = session['user_id']
+        # This line from the starter code will cause a 500 error if no user is logged in
+        # We will fix this after testing, as it's a latent bug.
+        user_id = session['user_id'] 
         if user_id:
             user = User.query.filter(User.id == user_id).first()
             return UserSchema().dump(user), 200
@@ -87,12 +89,36 @@ class CheckSession(Resource):
 class MemberOnlyIndex(Resource):
     
     def get(self):
-        pass
+        # 1. Check if user is logged in
+        if not session.get('user_id'):
+            return {'error': 'Unauthorized'}, 401
+        
+        # 2. If logged in, query for member-only articles
+        articles = Article.query.filter_by(is_member_only=True).all()
+        
+        # 3. Serialize and return the articles
+        article_schema = ArticleSchema(many=True)
+        return article_schema.dump(articles), 200
 
+# --- This is the class you are updating ---
 class MemberOnlyArticle(Resource):
     
     def get(self, id):
-        pass
+        # 1. Check if user is logged in
+        if not session.get('user_id'):
+            return {'error': 'Unauthorized'}, 401
+        
+        # 2. If logged in, find the article by ID
+        article = Article.query.filter_by(id=id).first()
+        
+        # 3. If article exists, serialize and return
+        if article:
+            article_schema = ArticleSchema()
+            return article_schema.dump(article), 200
+        
+        # 4. If no article found, return 404
+        return {'error': 'Article not found'}, 404
+# --- End of update ---
 
 api.add_resource(ClearSession, '/clear', endpoint='clear')
 api.add_resource(IndexArticle, '/articles', endpoint='article_list')
