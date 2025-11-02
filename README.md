@@ -1,123 +1,114 @@
-# Lab: Authorizing Requests
+# Lab Submission: Course 10, Module 2 - Authorizing Requests
 
-## Scenario
+This repository contains my solution for the "Authorizing Requests" lab. The goal is to implement a complete authorization workflow (session checking) on top of the existing authentication system. The work here follows the patterns and rubric from the Flatiron lesson.
 
-In this lab, we'll continue working on the blog site, and add some features that
-only logged in users have access to.
+## Features
 
-## Tools & Resources
+* **Authorization Guard Clause:** Implemented authorization for the `MemberOnlyIndex` (`GET /members_only_articles`) and `MemberOnlyArticle` (`GET /members_only_articles/<int:id>`) resources.
+* **Session Check:** Both routes use `session.get('user_id')` to check for an active session.
+* **401 Unauthorized Response:** If no user is authenticated, both routes correctly return a `{'error': 'Unauthorized'}` payload and a `401` status code.
+* **Content Filtering:** The `MemberOnlyIndex` resource correctly queries and returns *only* articles where the `is_member_only` attribute is `True`.
 
-- [GitHub Repo](https://github.com/learn-co-curriculum/flask-authorizing-requests-lab)
-- [What is Authentication? - auth0](https://auth0.com/intro-to-iam/what-is-authentication)
-- [API - Flask: class flask.session](https://flask.palletsprojects.com/en/2.2.x/api/#flask.session)
+## Environment
 
-## Set Up
+* **Backend:** Python 3.8.13 (via `pipenv`), Flask, Flask-SQLAlchemy, Flask-Migrate, Flask-RESTful, Marshmallow
+* **Frontend:** React (via `npm`)
+* **Testing:** `pytest`
 
-There is some starter code in place for a Flask API backend and a React frontend.
-To get set up, run:
+## Setup
+
+Please follow these steps to ensure the environment is built correctly. The database commands must be run from within the `server/` directory due to the project's specific import structure.
+
+1.  Clone and enter the project directory:
+    ```bash
+    git clone https://github.com/walbeck85/flask-authorizing-requests-lab
+    cd flask-authorizing-requests-lab
+    ```
+
+2.  Install backend and frontend dependencies:
+    ```bash
+    pipenv install
+    npm install --prefix client
+    ```
+
+3.  Activate the virtual environment:
+    ```bash
+    pipenv shell
+    ```
+
+4.  Build and seed the database:
+    ```bash
+    # From the project root, navigate into the server directory
+    cd server
+    
+    # Set the Flask app context for this directory
+    export FLASK_APP=app.py
+    
+    # Run migrations and seed the database
+    flask db upgrade
+    python seed.py
+    
+    # Return to the project root
+    cd ..
+    ```
+
+## How to Run the Application
+
+The application requires two terminals to run the backend and frontend concurrently.
+
+**Terminal 1: Run the Backend (Flask)**
 
 ```bash
-pipenv install; pipenv shell
-npm install --prefix client
+# Activate the virtual environment if not already active
+pipenv shell
+
+# Navigate into the server directory
 cd server
-flask db upgrade
-python seed.py
-```
 
-You can work on this lab by running the tests with `pytest -x`. It will also be
-helpful to see what's happening during the request/response cycle by running the
-app in the browser. You can run the Flask server with:
+# Set the Flask app context
+export FLASK_APP=app.py
 
-```bash
+# Run the application
 python app.py
-```
+````
 
-And you can run React in another terminal from the root project directory with:
+**Terminal 2: Run the Frontend (React)**
 
 ```bash
+# From the project root
 npm start --prefix client
 ```
 
-You don't have to make any changes to the React code to get this lab working.
+The React app will open at `http://localhost:3000` and is proxied to the Flask server at `http://localhost:5555`.
 
-## Instructions
+## Tests
 
-### Task 1: Define the Problem
-
-Now that we've got the basic login feature working, we need to reward our logged
-in users with some bonus content that only users who have logged in will be able
-to access.
-
-### Task 2: Determine the Design
-
-We added a new attribute to our articles, `is_member_only`, to reflect whether
-the article should only be available to authorized users of the site. We also
-created two new views: `MemberOnlyIndex` and `MemberOnlyArticle`.
-
-Your goal is to add the following functionality to the new views:
-
-- If a user is not signed in, the `get()` methods in each view should return a
-  status code of 401 unauthorized, along with an error message.
-- If the user is signed in, the `get()` methods in each view should return the
-  JSON data for the members-only articles and the members-only article by ID, respectively.
-
-### Task 3: Develop, Test, and Refine the Code
-
-#### Step 1: Check Current User for Authorization
-
-Use the `session` to find if the user is logged in or not.
-
-#### Step 2: Update Logic and Response if User is Authorized
-
-If a user is not signed in, the `get()` methods in each view should return a
-status code of 401 unauthorized, along with an error message.
-
-#### Step 3: Update Logic and Response if User is not Authorized
-
-If a user is not signed in, the `get()` methods in each view should return a
-status code of 401 unauthorized, along with an error message.
-
-#### Step 4: Test and Refine the Code
-
-Run the test suite:
+Run the test suite from the project **root** with the virtual environment active.
 
 ```bash
-pytest
+pytest -x -v
 ```
 
-If any tests aren't passing, refine your code using each error message.
+## Rubric Alignment
 
-View the app in browser and test login, logout, and session persistence. Refine code if needed.
+  * **Authorization: Member Articles Index:** The `MemberOnlyIndex` resource checks for `session.get('user_id')` and returns `401` if it is missing.
+  * **Member Articles Index (Content):** If authorized, the route queries `Article.query.filter_by(is_member_only=True).all()` to ensure only member articles are returned.
+  * **Authorization: Member Articles Show:** The `MemberOnlyArticle` resource also checks for `session.get('user_id')` and returns `401` if it is missing.
 
-Feel free to also take a look at how the frontend logic is set up to use these endpoints.
+## Branch and PR Workflow
 
-#### Step 5: Commit and Push Git History
+All logic was completed on the `feature/authorization` branch and merged into `main` via a pull request. This documentation update was prepared on the `feature/update-readme` branch.
 
-* Commit and push your code:
+## Instructor Checklist
 
-```bash
-git add .
-git commit -m "final solution"
-git push
-```
+To verify the submission:
 
-* If you created a separate feature branch, remember to open a PR on main and merge.
+1.  `pipenv install && npm install --prefix client`
+2.  `pipenv shell`
+3.  `cd server`
+4.  `export FLASK_APP=app.py`
+5.  `flask db upgrade && python seed.py`
+6.  `cd ..`
+7.  `pytest -x -v` (from project root) to verify all 3 tests pass.
 
-### Task 4: Document and Maintain
-Best Practice documentation steps:
-* Add comments to the code to explain purpose and logic, clarifying intent and functionality of your code to other developers.
-* Update README text to reflect the functionality of the application following https://makeareadme.com. 
-  * Add screenshot of completed work included in Markdown in README.
-* Delete any stale branches on GitHub
-* Remove unnecessary/commented out code
-* If needed, update git ignore to remove sensitive data
-
-## Important Submission Note
-
-Before you submit your solution, you need to save your progress with git.
-
-1. Add your changes to the staging area by executing `git add .`.
-2. Create a commit by executing `git commit -m "Your commit message"`.
-3. Push your commits to GitHub by executing `git push origin main`.
-
-CodeGrade will grade your lab using the same tests as are provided in the `testing/` directory.
+<!-- end list -->
